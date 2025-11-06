@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Preload/Preconnect demo</title></head>
+<body>
+<h1>Preload/Preconnect demo</h1>
+<p>This demo shows how your app can inject link tags when the SW broadcasts suggestions.</p>
+<script type="module">
+const ch = new BroadcastChannel('sw-cache-events');
+ch.onmessage = (e) => {
+  const { type, payload } = e.data || {};
+  if (type === 'preload') {
+    for (const href of payload || []) {
+      const l = document.createElement('link');
+      l.rel = 'preload'; l.href = href; document.head.appendChild(l);
+    }
+  }
+  if (type === 'preconnect') {
+    for (const href of payload || []) {
+      const l = document.createElement('link');
+      l.rel = 'preconnect'; l.href = href; document.head.appendChild(l);
+    }
+  }
+};
+</script>
+<p>Trigger suggestions from SW by setting `preload` / `preconnect` in the config.</p>
+</body>
+</html>

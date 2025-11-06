@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Seed by prefix</title></head>
+<body>
+<h1>Seed by prefix</h1>
+<p>Requires a manifest known to the worker (DEFAULT_MANIFEST or provided in payload).</p>
+<button id="go">Seed prefix /examples/</button>
+<pre id="out"></pre>
+<script type="module">
+import { swSeed } from '/sw-cache-api.min.js';
+document.getElementById('go').onclick = async () => {
+  const res = await swSeed({ manifest: '/examples/seed-urls.json', prefix: '/examples/', max: 100 });
+  document.getElementById('out').textContent = JSON.stringify(res, null, 2);
+};
+</script>
+</body>
+</html>

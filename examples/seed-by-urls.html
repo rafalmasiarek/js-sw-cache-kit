@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Seed by keys</title></head>
+<body>
+<h1>Seed by keys</h1>
+<button id="go">Seed</button>
+<pre id="out"></pre>
+<script type="module">
+import { swSeed } from '/sw-cache-api.min.js';
+const btn = document.getElementById('go');
+const out = document.getElementById('out');
+btn.onclick = async () => {
+  const res = await swSeed({ keys: ['/examples/seed-urls.json','/examples/index.html'] });
+  out.textContent = JSON.stringify(res, null, 2);
+};
+</script>
+</body>
+</html>

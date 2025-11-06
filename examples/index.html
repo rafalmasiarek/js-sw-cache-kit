@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>SW Cache Kit – Quick start</title></head>
+<body>
+<h1>SW Cache Kit – Quick start</h1>
+<p>This page registers the Service Worker with URL parameters and loads the client API.</p>
+
+<script type="module">
+  if ('serviceWorker' in navigator) {
+    const v = '3.0.0';
+    const seed = 'seed-0001';
+    const apply = '0';
+    navigator.serviceWorker.register(`/sw-worker.min.js?v=${v}&seed=${seed}&apply=${apply}`, { scope: '/' })
+      .then(() => console.log('SW registered'))
+      .catch(err => console.warn('SW register failed', err));
+  }
+</script>
+<script type="module" src="/sw-cache-api.min.js"></script>
+
+<ul>
+  <li><a href="/examples/seed-by-urls.html">Seed by keys</a></li>
+  <li><a href="/examples/seed-by-prefix.html">Seed by prefix</a></li>
+  <li><a href="/examples/seed-by-glob.html">Seed by glob</a></li>
+  <li><a href="/examples/purge.html">Purge examples</a></li>
+  <li><a href="/examples/metrics.html">Metrics formats</a></li>
+  <li><a href="/examples/openapi.html">OpenAPI viewer</a></li>
+  <li><a href="/examples/preload-preconnect.html">Preload/Preconnect demo</a></li>
+  <li><a href="/examples/fallback-demo.html">Fallback demo</a></li>
+  <li><a href="/_sw/debug">Debug overlay</a></li>
+</ul>
+</body>
+</html>

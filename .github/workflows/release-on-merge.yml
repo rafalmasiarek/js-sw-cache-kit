@@ -1,0 +1,84 @@
+name: Release on Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  tag-and-release:
+    # Only run if the PR was merged and is a release PR
+    if: >
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.title, 'chore(release): v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout merged commit on main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Extract version from package.json
+        id: ver
+        run: |
+          ver=$(jq -r '.version' package.json)
+          if [ -z "$ver" ] || [ "$ver" = "null" ]; then
+            echo "Failed to read version from package.json"; exit 1
+          fi
+          echo "version=$ver" >> $GITHUB_OUTPUT
+          echo "Version detected: $ver"
+
+      - name: Create git tag vX.Y.Z
+        run: |
+          ver="${{ steps.ver.outputs.version }}"
+          git tag "v${ver}"
+          git push origin "v${ver}"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          if [ ! -f package-lock.json ]; then
+            npm install --package-lock-only
+          fi
+          npm ci
+
+      - name: Build dist (unminified + minified)
+        run: |
+          npm run build
+          npm run build:min
+
+      - name: Verify dist artifacts
+        run: |
+          test -f dist/js-fair-consent.js
+          test -f dist/js-fair-consent.min.js
+          test -f dist/js-fair-consent.css
+          test -f dist/js-fair-consent.min.css
+
+      - name: Pack ZIP
+        run: |
+          ver="${{ steps.ver.outputs.version }}"
+          zip -r "js-fair-consent-${ver}.zip" dist README.md LICENSE docs demo package.json
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.version }}
+          name: v${{ steps.ver.outputs.version }}
+          files: |
+            js-fair-consent-${{ steps.ver.outputs.version }}.zip
+            dist/js-fair-consent.js
+            dist/js-fair-consent.min.js
+            dist/js-fair-consent.css
+            dist/js-fair-consent.min.css
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

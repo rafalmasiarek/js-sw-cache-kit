@@ -1,0 +1,31 @@
+{
+  "name": "js-sw-cache-kit",
+  "version": "3.0.0",
+  "license": "MIT",
+  "description": "Service Worker + API for smart static asset caching with seed/purge control and metrics.",
+  "type": "module",
+  "exports": {
+    "./worker": "./dist/sw-worker.min.js",
+    "./client": {
+      "import": "./dist/sw-cache-api.min.js",
+      "require": "./dist/sw-cache-api.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist && mkdir -p dist",
+    "build:copy": "cp src/sw-worker.js dist/sw-worker.js && cp src/sw-cache-api.js dist/sw-cache-api.js",
+    "build:min:worker": "esbuild src/sw-worker.js --format=iife --minify --legal-comments=none --outfile=dist/sw-worker.min.js",
+    "build:min:client": "esbuild src/sw-cache-api.js --format=esm --minify --legal-comments=none --outfile=dist/sw-cache-api.min.js",
+    "build": "npm run clean && npm run build:copy",
+    "build:min": "npm run build && npm run build:min:worker && npm run build:min:client"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12"
+  }
+}

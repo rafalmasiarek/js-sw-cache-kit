@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Purge</title></head>
+<body>
+<h1>Purge</h1>
+<button id="byKeys">Purge keys</button>
+<button id="byPrefix">Purge by prefix</button>
+<button id="byGlob">Purge by glob (dry-run)</button>
+<pre id="out"></pre>
+<script type="module">
+import { swPurge } from '/sw-cache-api.min.js';
+const out = document.getElementById('out');
+document.getElementById('byKeys').onclick = async () => {
+  const res = await swPurge({ keys: ['/examples/index.html'] });
+  out.textContent = JSON.stringify(res, null, 2);
+};
+document.getElementById('byPrefix').onclick = async () => {
+  const res = await swPurge({ prefix: '/examples/' });
+  out.textContent = JSON.stringify(res, null, 2);
+};
+document.getElementById('byGlob').onclick = async () => {
+  const res = await swPurge({ glob: '**/*.json' }, null, true);
+  out.textContent = JSON.stringify(res, null, 2);
+};
+</script>
+</body>
+</html>

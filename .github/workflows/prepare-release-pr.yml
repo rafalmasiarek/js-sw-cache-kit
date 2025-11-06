@@ -1,0 +1,93 @@
+name: Prepare Release PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Semver (e.g. 1.4.4)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Ensure jq
+        run: |
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update -y && sudo apt-get install -y jq
+          fi
+
+      - name: Bump package.json version and update references
+        run: |
+          ver="${{ inputs.version }}"
+          echo "Bumping to version: $ver"
+          jq --arg v "$ver" '.version=$v' package.json > package.json.tmp && mv package.json.tmp package.json
+
+          # Update CDN refs like @vX.Y.Z (best-effort)
+          grep -rl --exclude-dir=.git -E '@v[0-9]+\.[0-9]+\.[0-9]+' . | xargs -r sed -i "s/@v[0-9]\+\.[0-9]\+\.[0-9]\+/@v${ver}/g"
+
+          # Optional: update occurrences like version: "X.Y.Z" in docs/demo if you keep such fields
+          grep -rl --exclude-dir=.git -E 'version:\s*"[0-9]+\.[0-9]+\.[0-9]+' . | xargs -r sed -i "s/version:\s*\"[0-9]\+\.[0-9]\+\.[0-9]\+\"/version: \"${ver}\"/g"
+
+      - name: Install dependencies
+        run: |
+          if [ ! -f package-lock.json ]; then
+            npm install --package-lock-only
+          fi
+          npm ci
+
+      - name: Build dist (unminified + minified)
+        run: |
+          npm run build
+          npm run build:min
+
+      - name: Verify dist artifacts
+        run: |
+          test -f dist/js-fair-consent.js
+          test -f dist/js-fair-consent.min.js
+          test -f dist/js-fair-consent.css
+          test -f dist/js-fair-consent.min.css
+
+      - name: Commit bump to release branch
+        run: |
+          ver="${{ inputs.version }}"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "release/v${ver}"
+
+          # Commit version bump + reference updates.
+          git add package.json README.md docs dist || true
+          git commit -m "chore(release): v${ver}" || echo "No changes to commit"
+          git push origin "release/v${ver}"
+
+      - name: Open Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: release/v${{ inputs.version }}
+          base: main
+          title: "chore(release): v${{ inputs.version }}"
+          body: |
+            This PR prepares release **v${{ inputs.version }}**:
+            - Bumps `package.json` version
+            - Updates CDN references (`@vX.Y.Z`)
+            - Verifies build (unminified + minified dist)
+          labels: release
+          draft: false

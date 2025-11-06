@@ -1,0 +1,12 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>OpenAPI</title></head>
+<body>
+<h1>OpenAPI document</h1>
+<pre id="out">Loading…</pre>
+<script type="module">
+const pre = document.getElementById('out');
+fetch('/__sw_api/openapi.json').then(r=>r.json()).then(j=> pre.textContent = JSON.stringify(j, null, 2));
+</script>
+</body>
+</html>
