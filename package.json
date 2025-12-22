@@ -26,6 +26,6 @@
     "build:min": "npm run build && npm run build:min:worker && npm run build:min:client"
   },
   "devDependencies": {
-    "esbuild": "^0.25.12"
+    "esbuild": "^0.27.2"
   }
 }
